@@ -12,9 +12,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET', 'devsecret')
 
 # MongoDB connection (edit if using Atlas)
-MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/')
-client = MongoClient(MONGO_URI)
-db = client['online_exam_db']
+client = MongoClient(os.getenv("MONGO_URI"))
+db = client["Cluster0"]
 
 # Collections
 users_col = db['users']

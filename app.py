@@ -13,7 +13,7 @@ app.secret_key = os.environ.get('FLASK_SECRET', 'devsecret')
 
 # MongoDB connection (edit if using Atlas)
 client = MongoClient(os.getenv("MONGO_URI"))
-db = client["Cluster0"]
+db = client["online_exam"]
 
 # Collections
 users_col = db['users']

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Performance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h2>Welcome, {{ user.username }}</h2>
+    </header>
+
+    <section>
+        <h3>Performance Summary</h3>
+        <p><strong>Total Score:</strong> {{ performance.total_scored }}</p>
+        <p><strong>Total Possible:</strong> {{ performance.total_possible }}</p>
+        <p><strong>Percentage:</strong>
+            {% if performance.percentage is not none %}
+                {{ performance.percentage }}%
+            {% else %}
+                N/A
+            {% endif %}
+        </p>
+    </section>
+
+    <section>
+        <h3>Exam Submissions</h3>
+        {% if submissions %}
+            <ul>
+                {% for sub in submissions %}
+                    <li>
+                        <strong>{{ sub.test_title }}</strong> —
+                        Score: {{ sub.score }} / {{ sub.possible }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No submissions found.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h3>Performance Chart</h3>
+        <canvas id="performanceChart" width="600" height="300"></canvas>
+    </section>
+
+    <!-- Inject chart data safely -->
+    <script>
+        const labels = JSON.parse('{{ labels | tojson | safe }}');
+        const data = JSON.parse('{{ scores | tojson | safe }}');
+
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Scores',
+                    data: data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2 style="text-align:center; margin-top:12px;">Create Test</h2>
+
+  <form method="post" style="width:60%; margin:0 auto; padding:20px; border:1px solid #ccc; border-radius:8px;">
+    <label style="display:block; margin-bottom:10px;">
+      Title <br>
+      <input name="title" required style="width:100%; padding:8px;">
+    </label>
+
+    <label style="display:block; margin-bottom:10px;">
+      Type <br>
+      <select name="test_type" style="width:100%; padding:8px;">
+        <option value="assignment">Assignment</option>
+        <option value="quiz">Quiz</option>
+        <option value="exam">Exam</option>
+      </select>
+    </label>
+
+    <label style="display:block; margin-bottom:10px;">
+      Assign to (username or 'all') <br>
+      <input name="assigned_to" value="all" style="width:100%; padding:8px;">
+    </label>
+
+    <!-- Time Scheduling Options -->
+    <label style="display:block; margin-bottom:10px;">
+      Total Duration (minutes) <br>
+      <input type="number" name="duration_minutes" min="1" style="width:100%; padding:8px;" placeholder="Leave blank if using per-question time">
+    </label>
+
+    <label style="display:block; margin-bottom:10px;">
+      Time per Question (minutes) <br>
+      <input type="number" name="time_per_question" min="1" style="width:100%; padding:8px;" placeholder="Leave blank if using total duration">
+    </label>
+
+    <button type="submit" style="padding:10px 20px; font-size:16px;">Create</button>
+  </form>
+{% endblock %}

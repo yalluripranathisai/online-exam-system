@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Submissions for "{{ test.title }}"</h2>
+  <ul>
+    {% for s in submissions %}
+      <li>{{ s.student_username }} — Score: {{ s.score }} / {{ s.possible }}</li>
+    {% else %}
+      <li>No submissions yet</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

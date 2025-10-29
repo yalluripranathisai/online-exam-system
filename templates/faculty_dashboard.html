@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2 style="text-align:center; margin-top:8px;">Faculty Dashboard — {{ user.username }}</h2>
+
+  <div style="text-align:center; margin: 18px 0;">
+    <a href="{{ url_for('create_test') }}">
+      <button style="padding:10px 18px; font-size:16px;">➕ Create New Test</button>
+    </a>
+  </div>
+
+  <!-- Total Tests Count -->
+  <h4 style="text-align:center; margin-bottom:12px;">
+    Total Tests Conducted: {{ tests|length }}
+  </h4>
+
+  <h3 style="text-align:center; margin-bottom:8px;">Your Tests</h3>
+
+  <table style="width:90%; margin: 0 auto 40px; border-collapse: collapse; text-align:center;">
+    <thead style="background:#0d6efd; color:white;">
+      <tr>
+        <th style="padding:12px; border:1px solid #ddd;">Title</th>
+        <th style="padding:12px; border:1px solid #ddd;">Type</th>
+        <th style="padding:12px; border:1px solid #ddd;">Time Schedule</th>
+        <th style="padding:12px; border:1px solid #ddd;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tests %}
+        <tr>
+          <td style="padding:10px; border:1px solid #ddd;">{{ t.title }}</td>
+          <td style="padding:10px; border:1px solid #ddd;">{{ t.type }}</td>
+          
+          <!-- Time Schedule Column -->
+          <td style="padding:10px; border:1px solid #ddd;">
+            {% if t.duration_minutes %}
+              {{ t.duration_minutes }} min total
+            {% elif t.time_per_question %}
+              {{ t.time_per_question }} min/question
+            {% else %}
+              Not set
+            {% endif %}
+          </td>
+
+          <td style="padding:10px; border:1px solid #ddd;">
+            <!-- Add Questions -->
+            <a href="{{ url_for('add_question', test_id=t.id) }}">
+              <button style="margin:4px; padding:6px 10px;">Add Questions</button>
+            </a>
+
+            <!-- View Submissions -->
+            <a href="{{ url_for('view_submissions', test_id=t.id) }}">
+              <button style="margin:4px; padding:6px 10px;">View Submissions</button>
+            </a>
+
+            <!-- View Scores -->
+            <a href="{{ url_for('test_scores', test_id=t.id) }}">
+              <button style="margin:4px; padding:6px 10px;">View Scores</button>
+            </a>
+
+            <!-- Delete -->
+            <form action="{{ url_for('delete_test', test_id=t.id) }}" method="POST" style="display:inline;">
+              <button type="submit" style="margin:4px; padding:6px 10px; background:#d9534f; color:white; border:none;"
+                      onclick="return confirm('Delete this test and all its submissions?');">
+                Delete
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="4" style="padding:14px; border:1px solid #ddd;">No tests yet</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

@@ -16,6 +16,11 @@ MONGO_URI = os.environ.get("MONGO_URI")
 client = MongoClient(MONGO_URI)
 db = client["sample_mflix"]
 
+
+
+
+
+
 # Collections
 users_col = db['users']
 tests_col = db['tests']

@@ -8,6 +8,8 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 import os
 
+# Build version 2025-11-05 - Force fresh deploy
+
 # ---------------------------------------------------------
 # Flask and Mongo setup
 # ---------------------------------------------------------
@@ -89,6 +91,29 @@ def logout():
     session.clear()
     flash('Logged out', 'info')
     return redirect(url_for('login'))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        role = request.form.get('role', 'student')
+        if not username or not password:
+            flash('Username and password required', 'danger')
+            return redirect(url_for('register'))
+        if users_col.find_one({'username': username}):
+            flash('Username exists', 'danger')
+            return redirect(url_for('register'))
+        users_col.insert_one({
+            'username': username,
+            'password_hash': generate_password_hash(password),
+            'role': role,
+            'created_at': datetime.utcnow()
+        })
+        flash('User registered', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html')
 
 
 # ---------------------------------------------------------
@@ -196,6 +221,7 @@ def delete_test(test_id):
 
     tests_col.delete_one({'_id': ObjectId(test_id)})
     submissions_col.delete_many({'test_id': ObjectId(test_id)})
+    flash('Test deleted successfully', 'success')
     return redirect(url_for('faculty_dashboard'))
 
 
@@ -207,7 +233,8 @@ def test_scores(test_id):
 
     test = tests_col.find_one({'_id': ObjectId(test_id)})
     if not test:
-        return "Test not found", 404
+        flash('Test not found', 'danger')
+        return redirect(url_for('faculty_dashboard'))
 
     submissions = list(submissions_col.find({'test_id': ObjectId(test_id)}))
     scores = []
@@ -220,7 +247,8 @@ def test_scores(test_id):
             'submitted_at': s.get('submitted_at')
         })
 
-    return render_template('faculty_scores.html', test=test, scores=scores, user=user)
+    return render_template('faculty_scores.html', test=serialize_doc_for_template(test), 
+                         scores=scores, user=serialize_doc_for_template(user))
 
 
 # ---------------------------------------------------------
@@ -250,30 +278,73 @@ def student_dashboard():
                            summaries=summaries, avg=avg, total_scored=total_scored, total_possible=total_possible)
 
 
-# ---------------------------------------------------------
-# Registration
-# ---------------------------------------------------------
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
-        role = request.form.get('role', 'student')
-        if not username or not password:
-            flash('Username and password required', 'danger')
-            return redirect(url_for('register'))
-        if users_col.find_one({'username': username}):
-            flash('Username exists', 'danger')
-            return redirect(url_for('register'))
-        users_col.insert_one({
-            'username': username,
-            'password_hash': generate_password_hash(password),
-            'role': role,
-            'created_at': datetime.utcnow()
-        })
-        flash('User registered', 'success')
+@app.route('/student/take_test/<test_id>', methods=['GET', 'POST'])
+def take_test(test_id):
+    user = current_user()
+    if not user or user.get('role') != 'student':
         return redirect(url_for('login'))
-    return render_template('register.html')
+
+    try:
+        test = tests_col.find_one({'_id': ObjectId(test_id)})
+    except Exception:
+        test = None
+
+    if not test:
+        flash('Test not found', 'danger')
+        return redirect(url_for('student_dashboard'))
+
+    # Check if already submitted
+    existing_submission = submissions_col.find_one({'test_id': test['_id'], 'student_id': user['_id']})
+    if existing_submission:
+        flash('You have already submitted this test', 'info')
+        return redirect(url_for('student_dashboard'))
+
+    questions = list(questions_col.find({'test_id': test['_id']}))
+    
+    if request.method == 'POST':
+        score = 0.0
+        total_possible = 0.0
+
+        for q in questions:
+            qid = str(q['_id'])
+            total_possible += float(q.get('marks', 0))
+
+            if q['type'] == 'mcq_single':
+                answer = request.form.get(f'answer_{qid}', '').strip()
+                if answer in q.get('corrects', []):
+                    score += float(q.get('marks', 0))
+
+            elif q['type'] == 'mcq_multiple':
+                answers = request.form.getlist(f'answer_{qid}')
+                corrects = set(q.get('corrects', []))
+                if set(answers) == corrects:
+                    score += float(q.get('marks', 0))
+
+            elif q['type'] == 'short_text':
+                answer = request.form.get(f'answer_{qid}', '').strip().lower()
+                expected = q.get('expected', '').strip().lower()
+                if answer == expected:
+                    score += float(q.get('marks', 0))
+
+            elif q['type'] == 'long_text':
+                # For long text, mark as needs manual grading (give partial credit or 0)
+                # You can implement manual grading later
+                pass
+
+        # Save submission
+        submissions_col.insert_one({
+            'test_id': test['_id'],
+            'student_id': user['_id'],
+            'score': score,
+            'possible': total_possible,
+            'submitted_at': datetime.utcnow()
+        })
+
+        flash(f'Test submitted! Score: {score}/{total_possible}', 'success')
+        return redirect(url_for('student_dashboard'))
+
+    return render_template('take_test.html', test=serialize_doc_for_template(test),
+                         questions=[serialize_doc_for_template(q) for q in questions])
 
 
 # ---------------------------------------------------------
@@ -321,4 +392,4 @@ def download_student_report(username):
 # Main entry
 # ---------------------------------------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False)

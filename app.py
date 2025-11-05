@@ -520,9 +520,7 @@ def download_student_report(username):
     pdf.save()
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name=f"{username}_report.pdf", mimetype='application/pdf')
-@app.route('/')
-def home():
-    return "Online Examination System Running Successfully!"
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)

@@ -20,7 +20,7 @@ port = int(os.environ.get("PORT", 8080))
 MONGO_URI = os.environ.get("MONGO_URI")
 
 client = MongoClient(MONGO_URI)
-db = client["sample_mflix"]
+db = client["online_exam"]
 
 # Collections
 users_col = db['users']

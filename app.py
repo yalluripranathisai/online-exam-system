@@ -212,33 +212,7 @@ def add_question(test_id):
     qs = [serialize_doc_for_template(q) for q in qs_db]
     return render_template('add_question.html', test=serialize_doc_for_template(test_db), questions=qs)
 
-@app.route('/faculty/view_submissions/<test_id>')
-def view_submissions(test_id):
-    user = current_user()
-    if not user or user.get('role') != 'faculty':
-        return redirect(url_for('login'))
 
-    test = tests_col.find_one({'_id': ObjectId(test_id)})
-    if not test:
-        flash('Test not found', 'danger')
-        return redirect(url_for('faculty_dashboard'))
-
-    submissions = list(submissions_col.find({'test_id': ObjectId(test_id)}))
-    enriched_submissions = []
-    for s in submissions:
-        student = users_col.find_one({'_id': s['student_id']})
-        enriched_submissions.append({
-            'student': student['username'] if student else 'Unknown',
-            'submitted_at': s.get('submitted_at'),
-            'score': s.get('score'),
-            'possible': s.get('possible'),
-            'answers': s.get('answers', [])
-        })
-
-    return render_template('view_submissions.html',
-                           test=serialize_doc_for_template(test),
-                           submissions=enriched_submissions,
-                           user=serialize_doc_for_template(user))
 
 
 # ---------------------------------------------------------

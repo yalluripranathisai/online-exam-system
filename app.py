@@ -213,6 +213,42 @@ def add_question(test_id):
     return render_template('add_question.html', test=serialize_doc_for_template(test_db), questions=qs)
 
 
+@app.route('/faculty/delete_test/<test_id>', methods=['POST'])
+def delete_test(test_id):
+    user = current_user()
+    if not user or user.get('role') != 'faculty':
+        return redirect(url_for('login'))
+
+    tests_col.delete_one({'_id': ObjectId(test_id)})
+    submissions_col.delete_many({'test_id': ObjectId(test_id)})
+    flash('Test deleted successfully', 'success')
+    return redirect(url_for('faculty_dashboard'))
+
+
+@app.route('/faculty/test_scores/<test_id>')
+def test_scores(test_id):
+    user = current_user()
+    if not user or user.get('role') != 'faculty':
+        return redirect(url_for('login'))
+
+    test = tests_col.find_one({'_id': ObjectId(test_id)})
+    if not test:
+        flash('Test not found', 'danger')
+        return redirect(url_for('faculty_dashboard'))
+
+    submissions = list(submissions_col.find({'test_id': ObjectId(test_id)}))
+    scores = []
+    for s in submissions:
+        student = users_col.find_one({'_id': s['student_id']})
+        scores.append({
+            'student': student['username'] if student else 'Unknown',
+            'score': s['score'],
+            'possible': s['possible'],
+            'submitted_at': s.get('submitted_at')
+        })
+
+    return render_template('faculty_scores.html', test=serialize_doc_for_template(test), 
+                         scores=scores, user=serialize_doc_for_template(user))
 
 
 # ---------------------------------------------------------

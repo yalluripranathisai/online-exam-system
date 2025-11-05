@@ -10,9 +10,7 @@ port = int(os.environ.get("PORT", 8080))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET', 'devsecret')
-@app.route("/")
-def home():
-    return "Hello from Online Exam System!"
+
 
 
 # MongoDB connection (edit if using Atlas)

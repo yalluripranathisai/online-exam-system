@@ -1,37 +1,42 @@
 {% extends 'base.html' %}
 {% block title %}Take Test{% endblock %}
+
 {% block content %}
-  <h2>Taking: {{ test.title }}</h2>
-  <form method="post" action="/student/submit/{{ test.id }}">
-    {% for q in questions %}
-      <div class="question-block">
-        <p><strong>Q{{ loop.index }}.</strong> {{ q.qtext }} ({{ q.marks }} marks)</p>
+<h2>Taking: {{ test.title }}</h2>
+<form method="post" action="{{ url_for('submit_test', test_id=test.id) }}">
+  {% for q in questions %}
+    <div class="question-block">
+      <p><strong>Q{{ loop.index }}.</strong> {{ q.qtext }} ({{ q.marks }} marks)</p>
 
-        {% if q.type == 'mcq_single' %}
-          <div class="options">
-            {% for opt in q.options %}
-              <label class="option">
-                <input type="radio" name="{{ q.id }}" value="{{ opt }}">
-                {{ opt }}
-              </label>
-            {% endfor %}
-          </div>
+      {% if q.type == 'mcq_single' %}
+        <div class="options">
+          {% for opt in q.options %}
+            <label class="option">
+              <input type="radio" name="{{ q.id }}" value="{{ opt }}" required>
+              <span class="option-text">{{ opt }}</span>
+            </label>
+          {% endfor %}
+        </div>
 
-        {% elif q.type == 'mcq_multi' %}
-          <div class="options">
-            {% for opt in q.options %}
-              <label class="option">
-                <input type="checkbox" name="{{ q.id }}" value="{{ opt }}">
-                {{ opt }}
-              </label>
-            {% endfor %}
-          </div>
+      {% elif q.type == 'mcq_multi' %}
+        <div class="options">
+          {% for opt in q.options %}
+            <label class="option">
+              <input type="checkbox" name="{{ q.id }}" value="{{ opt }}">
+              <span class="option-text">{{ opt }}</span>
+            </label>
+          {% endfor %}
+        </div>
 
-        {% elif q.type == 'short_text' or q.type == 'numeric' %}
-          <input class="text-input" name="{{ q.id }}">
-        {% endif %}
-      </div>
-    {% endfor %}
-    <button type="submit">Submit Test</button>
-  </form>
+      {% elif q.type == 'short_text' or q.type == 'numeric' %}
+        <input class="text-input" name="{{ q.id }}" required><br>
+
+      {% elif q.type == 'long_text' %}
+        <textarea class="text-input" name="{{ q.id }}" rows="5" required></textarea><br>
+      {% endif %}
+    </div>
+    <hr>
+  {% endfor %}
+  <button type="submit">Submit Test</button>
+</form>
 {% endblock %}
